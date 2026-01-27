@@ -29,15 +29,14 @@ public class AuthController {
         this.refreshTokenService = refreshTokenService;
     }
 
-    // ---------- REGISTER ----------
+    // REGISTER //
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@Valid @RequestBody RegisterRequest req) {
         userService.register(req);
     }
 
-    // ---------- LOGIN ----------
-    // returns accessToken JSON + sets refreshToken cookie
+    // LOGIN //
     @PostMapping("/login")
     public AuthTokensResponse login(@Valid @RequestBody LoginRequest req, HttpServletResponse response) {
         User u = userService.authenticate(req.email, req.password);
@@ -50,8 +49,7 @@ public class AuthController {
         return new AuthTokensResponse(accessToken);
     }
 
-    // ---------- REFRESH ----------
-    // reads refreshToken from HttpOnly cookie, rotates it, returns new accessToken + new cookie
+    // REFRESH //
     @PostMapping("/refresh")
     public AuthTokensResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String oldRefresh = readCookie(request, "refreshToken");
@@ -67,7 +65,7 @@ public class AuthController {
         return new AuthTokensResponse(newAccess);
     }
 
-    // ---------- LOGOUT ----------
+    // LOGOUT //
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -78,7 +76,7 @@ public class AuthController {
         clearRefreshCookie(response);
     }
 
-    // ---------- helpers ----------
+    // HELPERS //
     private static String readCookie(HttpServletRequest req, String name) {
         Cookie[] cookies = req.getCookies();
         if (cookies == null) return null;

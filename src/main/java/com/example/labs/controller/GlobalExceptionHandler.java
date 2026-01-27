@@ -13,7 +13,7 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // DTO validation -> 400
+    // DTO validation -> 400 //
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 404
+    // 404 //
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     @ResponseBody
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
         return Map.of("error", "not_found", "message", ex.getMessage());
     }
 
-    // 409
+    // 409 //
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(ConflictException.class)
     @ResponseBody
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
         return Map.of("error", "conflict", "message", ex.getMessage());
     }
 
-    // 401
+    // 401 //
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseBody

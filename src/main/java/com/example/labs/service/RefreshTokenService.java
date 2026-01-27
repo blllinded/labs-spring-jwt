@@ -34,7 +34,6 @@ public class RefreshTokenService {
         this.userRepo = userRepo;
     }
 
-    // выдаём новый refresh токен пользователю (для login)
     public IssueResult issueForEmail(String email) {
         User u = userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -49,7 +48,7 @@ public class RefreshTokenService {
         return new IssueResult(rt.getToken());
     }
 
-    // refresh ротация: старый токен -> revoked, новый -> сохранён, вернуть user + новый токен
+    // refresh //
     public RotateResult rotate(String oldToken) {
         RefreshToken existing = repo.findByToken(oldToken)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));

@@ -47,7 +47,6 @@ public class TaskController {
         taskService.deleteMine(CurrentUser.email(), id);
     }
 
-    // ⭐ ВОТ ЭТО И ЕСТЬ 7.3
     @GetMapping("/stats")
     public Object stats() {
         return statsService.countMine(CurrentUser.email());
