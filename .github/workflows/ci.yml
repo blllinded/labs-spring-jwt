@@ -9,10 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-
       JWT_SECRET: 12345678901234567890123456789012
-
-
       DB_URL: jdbc:sqlite:target/test.db
 
     steps:
@@ -29,6 +26,12 @@ jobs:
       - name: Build & test
         run: mvn -U clean test
 
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
 
       - name: Upload JaCoCo report
         if: always()
