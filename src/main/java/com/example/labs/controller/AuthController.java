@@ -11,6 +11,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserService userService;
     private final JwtService jwtService;
@@ -39,14 +43,23 @@ public class AuthController {
     // LOGIN //
     @PostMapping("/login")
     public AuthTokensResponse login(@Valid @RequestBody LoginRequest req, HttpServletResponse response) {
-        User u = userService.authenticate(req.email, req.password);
+        try {
+            User u = userService.authenticate(req.email, req.password);
 
-        String accessToken = jwtService.generateAccessToken(u.getEmail());
-        String refreshToken = refreshTokenService.issueForEmail(u.getEmail()).token();
+            // Security event: successful login (no password, no tokens)
+            log.info("Login success for email={}", req.email);
 
-        setRefreshCookie(response, refreshToken);
+            String accessToken = jwtService.generateAccessToken(u.getEmail());
+            String refreshToken = refreshTokenService.issueForEmail(u.getEmail()).token();
 
-        return new AuthTokensResponse(accessToken);
+            setRefreshCookie(response, refreshToken);
+
+            return new AuthTokensResponse(accessToken);
+        } catch (RuntimeException ex) {
+            // Security event: failed login (no password, no tokens)
+            log.warn("Login failed for email={}", req.email);
+            throw ex;
+        }
     }
 
     // REFRESH //
@@ -54,10 +67,15 @@ public class AuthController {
     public AuthTokensResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String oldRefresh = readCookie(request, "refreshToken");
         if (oldRefresh == null || oldRefresh.isBlank()) {
+            // Security event: refresh attempt without cookie
+            log.warn("Refresh denied: missing refreshToken cookie");
             throw new com.example.labs.exception.UnauthorizedException("Missing refresh token");
         }
 
         RefreshTokenService.RotateResult rotated = refreshTokenService.rotate(oldRefresh);
+
+        // Security event: refresh success (no tokens logged)
+        log.info("Refresh success for email={}", rotated.user().getEmail());
 
         String newAccess = jwtService.generateAccessToken(rotated.user().getEmail());
         setRefreshCookie(response, rotated.newToken());
@@ -74,6 +92,9 @@ public class AuthController {
             refreshTokenService.revoke(refresh);
         }
         clearRefreshCookie(response);
+
+        // Security event: logout called (no tokens logged)
+        log.info("Logout called");
     }
 
     // HELPERS //
@@ -89,7 +110,7 @@ public class AuthController {
     private static void setRefreshCookie(HttpServletResponse response, String value) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
-                .secure(false)          // если будет HTTPS -> true
+                .secure(false)
                 .sameSite("Strict")
                 .path("/auth")
                 .maxAge(60L * 60 * 24 * 7)  // 7 days
