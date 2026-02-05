@@ -1,4 +1,4 @@
-# Labs 10–13 (Spring Boot + JWT + SQLite)
+# Labs 10–14 (Spring Boot + JWT + SQLite)
 
 REST API with:
 - Register/Login (JWT access token)
